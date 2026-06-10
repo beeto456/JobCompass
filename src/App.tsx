@@ -33,6 +33,8 @@ import {
   Trash2,
   FileText, // For Resume Vault
   ChevronDown,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 export default function App() {
@@ -696,38 +698,83 @@ export default function App() {
 
   if (!isUserAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden px-4" id="landing-page-root">
+      <div className={`min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 transition-colors duration-200 ${
+        theme === 'night' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
+      }`} id="landing-page-root">
+        {/* Floating Theme Toggle */}
+        <div className="absolute top-4 right-4 z-50">
+          <button
+            onClick={() => setTheme(theme === 'day' ? 'night' : 'day')}
+            className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 text-xs font-bold ${
+              theme === 'night'
+                ? 'bg-slate-900 border-slate-800 text-amber-400 hover:bg-slate-800 hover:text-amber-300'
+                : 'bg-white border-slate-200 text-slate-750 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
+            }`}
+            title={theme === 'day' ? 'Switch to Night Mode' : 'Switch to Day Mode'}
+          >
+            {theme === 'day' ? (
+              <Moon className="w-4 h-4 text-slate-600" />
+            ) : (
+              <Sun className="w-4 h-4 text-amber-400" />
+            )}
+          </button>
+        </div>
+
         {/* Glow circles */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl opacity-60 pointer-events-none" />
-        <div className="absolute bottom-10 left-1/4 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl opacity-60 pointer-events-none ${
+          theme === 'night' ? 'bg-indigo-500/10' : 'bg-indigo-400/5'
+        }`} />
+        <div className={`absolute bottom-10 left-1/4 w-72 h-72 rounded-full blur-3xl pointer-events-none ${
+          theme === 'night' ? 'bg-blue-500/5' : 'bg-blue-400/2'
+        }`} />
 
         <div className="w-full max-w-md relative z-10 text-center" id="landing-card-container">
           {/* Brand Icon Header */}
-          <div className="mx-auto w-16 h-16 bg-gradient-to-tr from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20 mb-6 border border-indigo-400/20">
+          <div className={`mx-auto w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl mb-6 border ${
+            theme === 'night' 
+              ? 'bg-gradient-to-tr from-indigo-500 to-indigo-600 shadow-indigo-500/20 border-indigo-400/20' 
+              : 'bg-indigo-600 shadow-indigo-600/15 border-indigo-500/10'
+          }`}>
             <Compass className="w-9 h-9 text-white animate-spin-slow" style={{ animationDuration: '24s' }} />
           </div>
 
           {/* Titles */}
-          <h1 className="text-4xl font-extrabold text-slate-100 tracking-tight mb-2">
+          <h1 className={`text-4xl font-extrabold tracking-tight mb-2 ${
+            theme === 'night' ? 'text-slate-100' : 'text-slate-900'
+          }`}>
             JobCompass
           </h1>
-          <p className="text-slate-400 text-sm max-w-sm mx-auto leading-relaxed mb-8">
-            Intelligently track and organize your application pipeline in real-time.
+          <p className={`text-sm max-w-sm mx-auto leading-relaxed mb-8 ${
+            theme === 'night' ? 'text-slate-400' : 'text-slate-505'
+          }`}>
+            Organise and track your job application pipeline in real-time
           </p>
 
           {/* Connection warning in footer if config issue detected */}
           {connectionError && (
-            <div className="mb-6 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs text-rose-400 flex items-center gap-2 text-left">
+            <div className={`mb-6 p-3 rounded-lg text-xs flex items-center gap-2 text-left border ${
+              theme === 'night' 
+                ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
+                : 'bg-rose-50 border-rose-200 text-rose-700'
+            }`}>
               <ShieldAlert className="w-4 h-4 shrink-0" />
               <span>Firebase is offline. Local sandboxes will remain operational.</span>
             </div>
           )}
 
           {/* Buttons Panel */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-3.5">
+          <div className={`rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-3.5 border ${
+            theme === 'night' 
+              ? 'bg-slate-900/60 border-slate-800' 
+              : 'bg-white border-slate-200/90'
+          }`}>
             <button
               onClick={handleGoogleLogin}
-              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-950 font-bold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 active:scale-98 transition-all shadow-md cursor-pointer"
+              className={`w-full font-bold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 active:scale-98 transition-all shadow-md cursor-pointer ${
+                theme === 'night'
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-950'
+                  : 'bg-slate-900 hover:bg-slate-850 text-white'
+              }`}
               id="google-login-btn"
             >
               <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
@@ -753,16 +800,22 @@ export default function App() {
 
             <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-800"></div>
+                <div className={`w-full border-t ${theme === 'night' ? 'border-slate-800' : 'border-slate-150'}`}></div>
               </div>
-              <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-slate-400 bg-slate-900/60 inset-y-0 px-2 max-w-max mx-auto leading-none">
+              <div className={`relative flex justify-center text-[10px] uppercase font-bold tracking-widest inset-y-0 px-3 max-w-max mx-auto leading-none ${
+                theme === 'night' ? 'text-slate-400 bg-slate-900' : 'text-slate-450 bg-white'
+              }`}>
                 or sandbox
               </div>
             </div>
 
             <button
               onClick={handleGuestLogin}
-              className="w-full bg-slate-800 hover:bg-slate-750 hover:border-slate-700/80 hover:text-slate-100 text-slate-300 font-bold text-xs py-3 px-4 rounded-xl border border-slate-800 flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
+              className={`w-full font-bold text-xs py-3 px-4 rounded-xl border flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer ${
+                theme === 'night'
+                  ? 'bg-slate-800 hover:bg-slate-750 hover:border-slate-705 text-slate-300 border-slate-800'
+                  : 'bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-slate-700 border-slate-205 shadow-2xs'
+              }`}
               id="guest-login-btn"
             >
               <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -770,20 +823,30 @@ export default function App() {
             </button>
 
             {/* Privacy & Login Info Dropdown Accordion */}
-            <div className="mt-4 border-t border-slate-800/80 pt-4 text-left" id="privacy-explanation-dropdown">
+            <div className={`mt-4 border-t pt-4 text-left ${
+              theme === 'night' ? 'border-slate-800/80' : 'border-slate-100'
+            }`} id="privacy-explanation-dropdown">
               <button
                 type="button"
                 onClick={() => setIsPrivacyInfoOpen(!isPrivacyInfoOpen)}
-                className="w-full flex items-center justify-between text-[11px] font-bold text-slate-400 hover:text-slate-300 transition-colors focus:outline-none"
+                className={`w-full flex items-center justify-between text-[11px] font-bold transition-colors focus:outline-none ${
+                  theme === 'night' ? 'text-slate-400 hover:text-slate-300' : 'text-slate-500 hover:text-slate-705'
+                }`}
               >
                 <span>Why Google Login vs. Guest Mode?</span>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isPrivacyInfoOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
+                  theme === 'night' ? 'text-slate-400' : 'text-slate-500'
+                } ${isPrivacyInfoOpen ? 'rotate-180' : ''}`} />
               </button>
               
               {isPrivacyInfoOpen && (
-                <div className="mt-2.5 space-y-3 text-[11.5px] text-slate-400 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-slate-850">
+                <div className={`mt-2.5 space-y-3 text-[11.5px] leading-relaxed p-3 rounded-xl border ${
+                  theme === 'night' 
+                    ? 'bg-slate-950/40 border-slate-850 text-slate-400' 
+                    : 'bg-slate-50 border-slate-150 text-slate-600'
+                }`}>
                   <div>
-                    <h4 className="font-bold text-slate-300 mb-0.5">Why Google Login is Required:</h4>
+                    <h4 className={`font-bold mb-0.5 ${theme === 'night' ? 'text-slate-300' : 'text-slate-800'}`}>Why Google Login is Required:</h4>
                     <p>
                       Logging in with Google securely stores your personal dashboard, job tracking pipelines, and uploaded resumes in our Cloud Database (Firestore). This ensures you can access your private job tracking dashboard on any desktop or mobile device.
                     </p>
@@ -795,15 +858,17 @@ export default function App() {
                     <p>
                       Guest mode behaves as a temporary sandbox stored inside your current browser's local cache. This approach has critical data sensitivity limitations:
                     </p>
-                    <ul className="list-disc list-inside mt-1 space-y-1 text-slate-400 pl-1">
+                    <ul className={`list-disc list-inside mt-1 space-y-1 pl-1 ${
+                      theme === 'night' ? 'text-slate-405' : 'text-slate-505'
+                    }`}>
                       <li>
-                        <strong className="text-slate-300">Privacy Risk:</strong> All saved job pipelines and private profile information can be easily cleared or viewed by others utilizing the same browser.
+                        <strong className={theme === 'night' ? 'text-slate-300' : 'text-slate-800'}>Privacy Risk:</strong> All saved job pipelines and private profile information can be easily cleared or viewed by others utilizing the same browser.
                       </li>
                       <li>
-                        <strong className="text-slate-300">Permanent Loss:</strong> Clearing browser data, cookies, or local cache will permanently delete your entire job tracker progress.
+                        <strong className={theme === 'night' ? 'text-slate-300' : 'text-slate-800'}>Permanent Loss:</strong> Clearing browser data, cookies, or local cache will permanently delete your entire job tracker progress.
                       </li>
                       <li>
-                        <strong className="text-slate-300">No Backup or Portability:</strong> Your track record is restricted to this one browser, preventing multi-device access and restore capabilities.
+                        <strong className={theme === 'night' ? 'text-slate-300' : 'text-slate-800'}>No Backup or Portability:</strong> Your track record is restricted to this one browser, preventing multi-device access and restore capabilities.
                       </li>
                     </ul>
                   </div>
@@ -812,7 +877,7 @@ export default function App() {
             </div>
           </div>
 
-          <p className="text-[10px] text-slate-400 mt-8 font-sans">
+          <p className={`text-[10px] mt-8 font-sans ${theme === 'night' ? 'text-slate-505' : 'text-slate-400'}`}>
             JobCompass Platform • App is Currently in Development (2026)
           </p>
         </div>
