@@ -1,6 +1,6 @@
 <div align="center">
   <!-- Replace this banner with a JobCompass screenshot when you have one hosted online -->
-  <img width="800" alt="JobCompass App Screenshot" src="[https://ai.google.dev/static/site-assets/images/share-ais-513315318.png](https://merlinsfolio.wordpress.com/wp-content/uploads/2026/06/jobcompass_view1.png)" />
+  <img width="800" alt="JobCompass App Screenshot" src="[https://merlinsfolio.wordpress.com/wp-content/uploads/2026/06/jobcompass_view1.png](https://merlinsfolio.wordpress.com/wp-content/uploads/2026/06/jobcompass_view1.png))" />
 </div>
 
 # JobCompass
