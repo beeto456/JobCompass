@@ -50,7 +50,7 @@ JobCompass was developed as a job search command centre for active job seekers. 
 
 ## Limitations
 
-- **Desktop-Optimized:** The UI is currently optimized for desktop. Use on mobile devices may result in layout inconsistencies or a less optimal experience.
+- **Desktop-Optimized:** The UI is currently optimized for desktop. While it can be used on mobile, more testing will be needed for a mobile-first experience.
 
 - **Guest Mode Limitations:** Guest mode is useful for testing the app, but data may only be stored locally or temporarily. Resume upload, cloud sync, and cross-device access require Google login.
 
