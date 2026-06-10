@@ -111,18 +111,22 @@ export default function CalendarView({
 
       // Additional rounds dates
       if (app.interviewDates && app.interviewDates.length > 0) {
-        app.interviewDates.forEach((date, index) => {
-          if (date) {
-            list.push({
-              id: `add-round-${app.id}-${index}`,
-              sourceId: app.id,
-              title: `Ad-hoc round with ${app.company}`,
-              subtitle: `Round #${index + 2} - ${app.title}`,
-              date: date,
-              type: 'Additional Round',
-              notes: app.notes,
-              appRef: app,
-            });
+        app.interviewDates.forEach((d, index) => {
+          if (d) {
+            const dateStr = typeof d === 'string' ? d : d.date;
+            const customTitle = typeof d === 'string' ? '' : d.title;
+            if (dateStr) {
+              list.push({
+                id: `add-round-${app.id}-${index}`,
+                sourceId: app.id,
+                title: customTitle || `Ad-hoc round with ${app.company}`,
+                subtitle: customTitle ? `${customTitle} (${app.company})` : `Round #${index + 2} - ${app.title}`,
+                date: dateStr,
+                type: 'Additional Round',
+                notes: app.notes,
+                appRef: app,
+              });
+            }
           }
         });
       }

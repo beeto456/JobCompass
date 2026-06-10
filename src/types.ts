@@ -22,6 +22,15 @@ export function normalizeStatus(status: string): JobStatus {
 
 export type WorkArrangement = 'Remote' | 'Hybrid' | 'Onsite' | 'Unknown';
 
+export type EmploymentType =
+  | 'Full-Time'
+  | 'Part-Time'
+  | 'Contract'
+  | 'Casual'
+  | 'Freelance'
+  | 'Internship'
+  | 'Other';
+
 export interface JobApplication {
   id: string;
   userId: string;
@@ -31,6 +40,7 @@ export interface JobApplication {
   applicationDate: string; // YYYY-MM-DD
   status: JobStatus;
   workArrangement: WorkArrangement;
+  employmentType?: EmploymentType;
   officeLocation: string;
   salaryInformation: string;
   targetSalary?: string;
@@ -44,7 +54,12 @@ export interface JobApplication {
   requirementsMetaJson?: string;
   interviewDate?: string;
   followUpDate?: string;
-  interviewDates?: string[];
+  interviewDates?: (string | AdditionalDate)[];
+}
+
+export interface AdditionalDate {
+  date: string;
+  title?: string;
 }
 
 export interface CalendarEvent {

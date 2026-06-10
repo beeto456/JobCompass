@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { JobApplication, JobStatus, WorkArrangement, Resume } from '../types';
+import { JobApplication, JobStatus, WorkArrangement, Resume, EmploymentType, AdditionalDate } from '../types';
 import { X, Send, Briefcase, Link2, DollarSign, MapPin, AlignLeft, Calendar, Clock, ArrowLeft, ClipboardList, Plus, Lock, Unlock, Edit2, ExternalLink, FileText, UploadCloud } from 'lucide-react';
 
 interface ApplicationFormProps {
@@ -29,15 +29,29 @@ const STATUS_OPTIONS: JobStatus[] = [
 
 const ARRANGEMENT_OPTIONS: WorkArrangement[] = ['Unknown', 'Remote', 'Hybrid', 'Onsite'];
 
+const EMPLOYMENT_OPTIONS: EmploymentType[] = [
+  'Full-Time',
+  'Part-Time',
+  'Contract',
+  'Casual',
+  'Freelance',
+  'Internship',
+  'Other',
+];
+
 export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData, theme, resumes, onUploadResume, isGuest = false, onGoogleLogin }: ApplicationFormProps) {
   const [title, setTitle] = useState('');
   const [company, setCompany] = useState('');
   const [url, setUrl] = useState('');
+  const [viewMode, setViewMode] = useState<'basic' | 'advanced'>(() => {
+    return (localStorage.getItem('job_tracker_view_mode') as 'basic' | 'advanced') || 'basic';
+  });
   const [applicationDate, setApplicationDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
   const [status, setStatus] = useState<JobStatus>('Applied');
   const [workArrangement, setWorkArrangement] = useState<WorkArrangement>('Unknown');
+  const [employmentType, setEmploymentType] = useState<EmploymentType | ''>('');
   const [officeLocation, setOfficeLocation] = useState('');
   const [salaryInformation, setSalaryInformation] = useState('');
   const [targetSalary, setTargetSalary] = useState('');
@@ -51,7 +65,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
 
   const [interviewDate, setInterviewDate] = useState('');
   const [followUpDate, setFollowUpDate] = useState('');
-  const [interviewDates, setInterviewDates] = useState<string[]>([]);
+  const [interviewDates, setInterviewDates] = useState<AdditionalDate[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -63,6 +77,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
       setApplicationDate(initialData.applicationDate ? initialData.applicationDate.substring(0, 10) : new Date().toISOString().split('T')[0]);
       setStatus(initialData.status || 'Applied');
       setWorkArrangement(initialData.workArrangement || 'Unknown');
+      setEmploymentType(initialData.employmentType || '');
       setOfficeLocation(initialData.officeLocation || '');
       setSalaryInformation(initialData.salaryInformation || '');
       setTargetSalary(initialData.targetSalary || '');
@@ -73,7 +88,13 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
       setSelectedResumeId(initialData.resumeId || '');
       setInterviewDate(initialData.interviewDate || '');
       setFollowUpDate(initialData.followUpDate || '');
-      setInterviewDates(initialData.interviewDates || []);
+      const parsedDates: AdditionalDate[] = (initialData.interviewDates || []).map((item) => {
+        if (typeof item === 'string') {
+          return { date: item, title: '' };
+        }
+        return { date: item.date || '', title: item.title || '' };
+      });
+      setInterviewDates(parsedDates);
       setIsLocked(true);
       try {
         if (initialData.requirementsMetaJson) {
@@ -92,6 +113,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
       setApplicationDate(new Date().toISOString().split('T')[0]);
       setStatus('Applied');
       setWorkArrangement('Unknown');
+      setEmploymentType('');
       setOfficeLocation('');
       setSalaryInformation('');
       setTargetSalary('');
@@ -183,6 +205,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
       applicationDate,
       status,
       workArrangement,
+      employmentType: employmentType || undefined,
       officeLocation: officeLocation.trim(),
       salaryInformation: salaryInformation.trim(),
       targetSalary: targetSalary.trim(),
@@ -281,6 +304,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
                     : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100/70 font-bold'
               }`}
               id="btn-edit-unlock-details"
+              title="Click this to allow/lock job profile editing"
             >
               {isLocked ? (
                 <>
@@ -296,12 +320,70 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
             </button>
           )}
 
-          {isLocked && (
+          {initialData && (
             <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="font-mono">Locked / Read-Only</span>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${isLocked ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+              <span className="font-mono">
+                {isLocked ? 'Locked / Read-Only' : 'Unlocked / Editing Mode'}
+              </span>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* View Mode Switcher */}
+      <div className={`p-4 rounded-2xl border mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
+        theme === 'night' ? 'bg-slate-950/45 border-slate-850' : 'bg-slate-50/60 border-slate-200'
+      }`}>
+        <div className="space-y-1">
+          <span className={`text-[10px] font-mono uppercase tracking-widest font-extrabold ${theme === 'night' ? 'text-indigo-400' : 'text-blue-600'}`}>
+            Form View Mode
+          </span>
+          <p className={`text-xs ${theme === 'night' ? 'text-slate-400' : 'text-slate-600'}`}>
+            Switch view type to simplify or expand options.
+          </p>
+        </div>
+        <div className={`p-1 rounded-xl border flex items-center gap-1 shrink-0 ${
+          theme === 'night' ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
+        }`}>
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('basic');
+              localStorage.setItem('job_tracker_view_mode', 'basic');
+            }}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-155 cursor-pointer flex items-center gap-1.5 ${
+              viewMode === 'basic'
+                ? theme === 'night'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
+                  : 'bg-blue-600 text-white shadow-sm shadow-blue-500/10'
+                : theme === 'night'
+                  ? 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 hover:text-slate-800'
+            }`}
+            id="toggle-view-mode-basic"
+          >
+            Basic View
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('advanced');
+              localStorage.setItem('job_tracker_view_mode', 'advanced');
+            }}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-155 cursor-pointer flex items-center gap-1.5 ${
+              viewMode === 'advanced'
+                ? theme === 'night'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
+                  : 'bg-blue-600 text-white shadow-sm shadow-blue-500/10'
+                : theme === 'night'
+                  ? 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 hover:text-slate-800'
+            }`}
+            id="toggle-view-mode-advanced"
+          >
+            Advanced View
+          </button>
         </div>
       </div>
 
@@ -364,68 +446,92 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 font-sans transition-colors ${
-                theme === 'night' ? 'text-slate-300' : 'text-slate-700'
-              }`}>
-                Current Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as JobStatus)}
-                disabled={isLocked}
-                className={getSelectClass()}
-                id="select-form-status"
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt} className={theme === 'night' ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-850'}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {viewMode === 'advanced' && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 font-sans transition-colors ${
+                  theme === 'night' ? 'text-slate-300' : 'text-slate-700'
+                }`}>
+                  Current Status
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as JobStatus)}
+                  disabled={isLocked}
+                  className={getSelectClass()}
+                  id="select-form-status"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt} className={theme === 'night' ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-850'}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 font-sans transition-colors ${
-                theme === 'night' ? 'text-slate-300' : 'text-slate-700'
-              }`}>
-                Work Arrangement
-              </label>
-              <select
-                value={workArrangement}
-                onChange={(e) => setWorkArrangement(e.target.value as WorkArrangement)}
-                disabled={isLocked}
-                className={getSelectClass()}
-                id="select-form-arrangement"
-              >
-                <option value="Unknown" disabled className={theme === 'night' ? 'bg-slate-900 text-slate-400' : 'bg-white text-slate-400'}>Select Arrangement</option>
-                {ARRANGEMENT_OPTIONS.filter((opt) => opt !== 'Unknown').map((opt) => (
-                  <option key={opt} value={opt} className={theme === 'night' ? 'bg-slate-900 text-slate-205' : 'bg-white text-slate-800'}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 font-sans transition-colors ${
+                  theme === 'night' ? 'text-slate-300' : 'text-slate-700'
+                }`}>
+                  Work Arrangement
+                </label>
+                <select
+                  value={workArrangement}
+                  onChange={(e) => setWorkArrangement(e.target.value as WorkArrangement)}
+                  disabled={isLocked}
+                  className={getSelectClass()}
+                  id="select-form-arrangement"
+                >
+                  <option value="Unknown" disabled className={theme === 'night' ? 'bg-slate-900 text-slate-400' : 'bg-white text-slate-400'}>Select Arrangement</option>
+                  {ARRANGEMENT_OPTIONS.filter((opt) => opt !== 'Unknown').map((opt) => (
+                    <option key={opt} value={opt} className={theme === 'night' ? 'bg-slate-900 text-slate-205' : 'bg-white text-slate-800'}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-sans transition-colors ${
-                theme === 'night' ? 'text-slate-300' : 'text-slate-700'
-              }`}>
-                <MapPin className="w-3 h-3 text-slate-400" />
-                Office Location
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Bedok, Singapore"
-                value={officeLocation}
-                onChange={(e) => setOfficeLocation(e.target.value)}
-                disabled={isLocked}
-                className={getInputClass()}
-                id="input-location"
-              />
+              <div>
+                <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 font-sans transition-colors ${
+                  theme === 'night' ? 'text-slate-300' : 'text-slate-700'
+                }`}>
+                  Employment Type
+                </label>
+                <select
+                  value={employmentType}
+                  onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
+                  disabled={isLocked}
+                  className={getSelectClass()}
+                  id="select-form-employment"
+                >
+                  <option value="" className={theme === 'night' ? 'bg-slate-900 text-slate-400' : 'bg-white text-slate-400'}>Select Type</option>
+                  {EMPLOYMENT_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt} className={theme === 'night' ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-sans transition-colors ${
+                  theme === 'night' ? 'text-slate-300' : 'text-slate-700'
+                }`}>
+                  <MapPin className="w-3 h-3 text-slate-400" />
+                  Office Location
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Bedok, Singapore"
+                  value={officeLocation}
+                  onChange={(e) => setOfficeLocation(e.target.value)}
+                  disabled={isLocked}
+                  className={getInputClass()}
+                  id="input-location"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center justify-between font-sans transition-colors ${
@@ -471,12 +577,46 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
             </div>
             {errors.url && <p className="text-xs text-rose-500 mt-1">{errors.url}</p>}
           </div>
+
+          {viewMode === 'basic' && (
+            <div className="space-y-2 pt-4 border-t border-dashed border-slate-200 dark:border-slate-800">
+              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center justify-between font-sans transition-colors ${
+                theme === 'night' ? 'text-slate-300' : 'text-slate-700'
+              }`}>
+                <span className="flex items-center gap-1.5">
+                  <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
+                  Paste Job Description
+                </span>
+              </label>
+              <textarea
+                placeholder="Paste the requirements, responsibilities, and job details here."
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                disabled={isLocked}
+                rows={8}
+                className={`w-full border rounded-xl p-3 text-xs focus:outline-none transition-all font-sans leading-relaxed ${
+                  theme === 'night'
+                    ? isLocked
+                      ? 'bg-slate-950/60 border-slate-900 text-slate-400 cursor-not-allowed'
+                      : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-indigo-500/85 focus:ring-2 focus:ring-indigo-900/30'
+                    : isLocked
+                      ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed'
+                      : 'bg-slate-50 border-slate-300 text-slate-800 focus:bg-white focus:border-blue-500/85 focus:ring-2 focus:ring-blue-100/40 font-semibold'
+                }`}
+                id="input-job-description"
+              />
+              <p className={`text-[10px] italic ${theme === 'night' ? 'text-slate-400' : 'text-slate-555'}`}>
+                You can switch to Advanced View at any time to unlock checklists, suitability match ratings, salary trackers, and resume linking.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* SECTION 2: Application Timeline */}
-        <div className={`p-5 md:p-6 rounded-2xl border transition-all space-y-4 ${
-          theme === 'night' ? 'bg-slate-950/10 border-slate-850' : 'bg-slate-50/30 border-slate-200/90'
-        }`}>
+        {viewMode === 'advanced' && (
+          <div className={`p-5 md:p-6 rounded-2xl border transition-all space-y-4 ${
+            theme === 'night' ? 'bg-slate-950/10 border-slate-850' : 'bg-slate-50/30 border-slate-200/90'
+          }`}>
           <div className="flex items-start gap-3 border-b pb-3 border-dashed dark:border-slate-800 border-slate-200">
             <div className={`p-2 rounded-xl shrink-0 ${theme === 'night' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
               <Clock className="w-4.5 h-4.5" />
@@ -558,7 +698,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
               {!isLocked && (
                 <button
                   type="button"
-                  onClick={() => setInterviewDates([...interviewDates, ''])}
+                  onClick={() => setInterviewDates([...interviewDates, { date: '', title: '' }])}
                   className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-102 active:scale-98 ${
                     theme === 'night'
                       ? 'bg-slate-950 border-slate-800 text-indigo-400 hover:bg-slate-800/40 hover:border-slate-700'
@@ -576,51 +716,78 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
               <p className="text-[11px] italic text-slate-455 dark:text-slate-500">No additional interview dates registered.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {interviewDates.map((date, idx) => (
-                  <div key={idx} className={`flex items-center gap-2 p-2 border rounded-xl ${
-                    theme === 'night' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                {interviewDates.map((item, idx) => (
+                  <div key={idx} className={`flex flex-col gap-2 p-3 border rounded-xl relative ${
+                    theme === 'night' ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200'
                   }`}>
+                    <div className="flex gap-2 items-center justify-between">
+                      <input
+                        type="text"
+                        placeholder="Title (e.g. Assessment, Chat...)"
+                        value={typeof item === 'string' ? '' : (item.title || '')}
+                        onChange={(e) => {
+                          const copy = [...interviewDates];
+                          const current = typeof copy[idx] === 'string' ? { date: copy[idx] as string } : copy[idx] as AdditionalDate;
+                          copy[idx] = { ...current, title: e.target.value };
+                          setInterviewDates(copy);
+                        }}
+                        disabled={isLocked}
+                        className={`flex-1 border-b bg-transparent text-[11px] px-1 py-0.5 focus:outline-none focus:ring-0 ${
+                          theme === 'night'
+                            ? isLocked 
+                              ? 'border-slate-850 text-slate-400 cursor-not-allowed' 
+                              : 'border-slate-800 text-slate-200 focus:border-indigo-500'
+                            : isLocked 
+                              ? 'border-slate-100 text-slate-400 cursor-not-allowed' 
+                              : 'border-slate-200 text-slate-800 focus:border-blue-500'
+                        }`}
+                        id={`extra-interview-title-${idx}`}
+                      />
+                      {!isLocked && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const copy = [...interviewDates];
+                            copy.splice(idx, 1);
+                            setInterviewDates(copy);
+                          }}
+                          className="p-1 rounded-md transition-colors text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0"
+                          title="Remove date"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="date"
-                      value={date}
+                      value={typeof item === 'string' ? item : (item.date || '')}
                       onChange={(e) => {
                         const copy = [...interviewDates];
-                        copy[idx] = e.target.value;
+                        const current = typeof copy[idx] === 'string' ? { title: '' } : copy[idx] as AdditionalDate;
+                        copy[idx] = { ...current, date: e.target.value };
                         setInterviewDates(copy);
                       }}
                       disabled={isLocked}
-                      className={`flex-1 border-0 bg-transparent text-xs p-1 focus:outline-none focus:ring-0 ${
+                      className={`w-full border-0 bg-transparent text-xs p-1 focus:outline-none focus:ring-0 ${
                         theme === 'night'
-                          ? isLocked ? 'text-slate-400 cursor-not-allowed' : 'text-slate-205'
-                          : isLocked ? 'text-slate-400 cursor-not-allowed' : 'text-slate-800 font-semibold'
+                          ? isLocked ? 'text-slate-400 cursor-not-allowed font-medium' : 'text-slate-200'
+                          : isLocked ? 'text-slate-400 cursor-not-allowed font-medium' : 'text-slate-800 font-semibold'
                       }`}
                       id={`extra-interview-date-${idx}`}
                     />
-                    {!isLocked && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const copy = [...interviewDates];
-                          copy.splice(idx, 1);
-                          setInterviewDates(copy);
-                        }}
-                        className="p-1 rounded-md transition-colors text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                        title="Remove date"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
             )}
           </div>
         </div>
+        )}
 
         {/* SECTION 3: Compensation & Interview Setup */}
-        <div className={`p-5 md:p-6 rounded-2xl border transition-all space-y-4 ${
-          theme === 'night' ? 'bg-slate-950/15 border-slate-850' : 'bg-slate-50/40 border-slate-200'
-        }`}>
+        {viewMode === 'advanced' && (
+          <div className={`p-5 md:p-6 rounded-2xl border transition-all space-y-4 ${
+            theme === 'night' ? 'bg-slate-950/15 border-slate-850' : 'bg-slate-50/40 border-slate-200'
+          }`}>
           <div className="flex items-start gap-3 border-b pb-3 border-dashed dark:border-slate-800 border-slate-200">
             <div className={`p-2 rounded-xl shrink-0 ${theme === 'night' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
               <DollarSign className="w-4.5 h-4.5" />
@@ -630,12 +797,12 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
                 3. Compensation & Interview Setup
               </h3>
               <p className={`text-[10px] mt-0.5 ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>
-                Stores salary expectations, posted salary range, interview method, and interview round number.
+                Stores salary expectations, posted salary range, and interview method.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-sans transition-colors ${
                 theme === 'night' ? 'text-slate-300' : 'text-slate-700'
@@ -691,25 +858,9 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
                 <option value="N/A" className={theme === 'night' ? 'bg-slate-900 text-slate-205' : 'bg-white text-slate-800'}>N/A</option>
               </select>
             </div>
-
-            <div>
-              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 font-sans transition-colors ${
-                theme === 'night' ? 'text-slate-300' : 'text-slate-700'
-              }`}>
-                Interview Round No.
-              </label>
-              <input
-                type="text"
-                placeholder="1"
-                value={interviewRound}
-                onChange={(e) => setInterviewRound(e.target.value)}
-                disabled={isLocked}
-                className={getInputClass()}
-                id="input-interview-round"
-              />
-            </div>
           </div>
         </div>
+        )}
 
 
 
@@ -719,6 +870,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
 
         {/* Job Match Percentage Section */}
         {(() => {
+          if (viewMode === 'basic') return null;
           const matchPercentage = calculateJobMatchPercentage();
           let matchColorClass = 'text-slate-600 dark:text-slate-400';
           const matchBgClass = theme === 'night' ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50/75 border-slate-200';
@@ -773,7 +925,8 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
         })()}
 
         {/* Group: Job Requirements with Paste Textbox */}
-        <div className="space-y-4">
+        {viewMode === 'advanced' && (
+          <div className="space-y-4">
           <label className={`block text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 font-sans transition-colors ${
             theme === 'night' ? 'text-slate-300' : 'text-slate-700'
           }`}>
@@ -907,9 +1060,11 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
             </div>
           )}
         </div>
+        )}
 
         {/* Tailored Resumes Section */}
-        <div className="space-y-3">
+        {viewMode === 'advanced' && (
+          <div className="space-y-3">
           <label className={`block text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 font-sans transition-colors ${
             theme === 'night' ? 'text-slate-300' : 'text-slate-700'
           }`}>
@@ -1041,9 +1196,11 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
             )}
           </div>
         </div>
+        )}
 
         {/* Notes (Private Notes) - ALways active */}
-        <div>
+        {viewMode === 'advanced' && (
+          <div>
           <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-sans transition-colors ${
             theme === 'night' ? 'text-slate-300' : 'text-slate-700'
           }`}>
@@ -1063,6 +1220,7 @@ export default function ApplicationForm({ isOpen, onClose, onSubmit, initialData
             id="input-private-notes"
           />
         </div>
+        )}
 
         {/* Buttons Panel */}
         <div className={`pt-6 border-t flex justify-end gap-3 transition-colors duration-200 ${

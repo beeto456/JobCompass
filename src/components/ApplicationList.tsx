@@ -140,6 +140,7 @@ export default function ApplicationList({
   const [sortBy, setSortBy] = useState<'title-asc' | 'title-desc' | 'company-asc' | 'company-desc' | 'date-new' | 'date-old'>('date-new');
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
   const [downloadingResumeId, setDownloadingResumeId] = useState<string | null>(null);
+  const [expandedMobileMetadata, setExpandedMobileMetadata] = useState<Record<string, boolean>>({});
 
   const handleDownloadResume = async (e: React.MouseEvent, resume: Resume) => {
     e.stopPropagation();
@@ -409,118 +410,170 @@ export default function ApplicationList({
                     );
                   })()}
 
+                  {/* Mobile Dropdown toggle */}
+                  {(() => {
+                    const isExpanded = !!expandedMobileMetadata[app.id];
+                    return (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedMobileMetadata((prev) => ({
+                            ...prev,
+                            [app.id]: !isExpanded,
+                          }));
+                        }}
+                        className={`md:hidden flex w-full items-center justify-between py-2 px-3 mb-3 text-[10px] font-extrabold uppercase tracking-wider rounded-xl border transition-all cursor-pointer ${
+                          theme === 'night'
+                            ? 'bg-slate-950 border-slate-800 text-slate-350 hover:text-slate-200 hover:border-slate-705'
+                            : 'bg-slate-50 border-slate-200 text-slate-550 hover:text-slate-900 hover:border-slate-305'
+                        }`}
+                        id={`toggle-mobile-meta-${app.id}`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          {isExpanded ? 'Hide Info Details' : 'Show Info Details'}
+                        </span>
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} />
+                      </button>
+                    );
+                  })()}
+
                   {/* Metadata: Location, Salary, Applied Date */}
-                  <div className={`space-y-2 mb-4 text-xs font-sans ${theme === 'night' ? 'text-slate-350' : 'text-slate-700'}`}>
-                    {app.officeLocation && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{app.officeLocation}</span>
-                      </div>
-                    )}
-                    {app.salaryInformation && (
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
-                        <span className={`font-semibold ${theme === 'night' ? 'text-slate-300' : 'text-slate-800'}`}>
-                          Range: {app.salaryInformation}
-                        </span>
-                      </div>
-                    )}
-                    {app.targetSalary && (
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-555 dark:text-emerald-400 shrink-0" />
-                        <span className={`font-semibold ${theme === 'night' ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                          Target: {app.targetSalary}
-                        </span>
-                      </div>
-                    )}
-                    {(app.interviewMethod || app.interviewRound) && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400">
-                          {app.interviewMethod || 'Interview'}{app.interviewRound ? ` - Rd ${app.interviewRound}` : ''}
-                        </span>
-                      </div>
-                    )}
-                    {app.resumeId && (() => {
-                      const linkedResume = resumes.find(r => r.id === app.resumeId);
-                      return (
-                        <div className="flex items-center gap-2 mt-1">
-                          <button
-                            type="button"
-                            onClick={(e) => linkedResume && handleDownloadResume(e, linkedResume)}
-                            disabled={!linkedResume || downloadingResumeId === linkedResume.id}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] uppercase tracking-wider font-extrabold cursor-pointer transition-all hover:scale-102 active:scale-98 ${
-                              theme === 'night'
-                                ? 'bg-orange-95/40 border-orange-500/30 text-orange-400 hover:bg-orange-900/30 hover:border-orange-400/45'
-                                : 'bg-orange-50/90 border-orange-200/90 text-orange-800 hover:bg-orange-100 hover:border-orange-300 shadow-xs'
-                            }`}
-                            title={linkedResume ? `Click to download: ${linkedResume.displayName || linkedResume.name}` : 'Resume file linked'}
-                          >
-                            <FileText className={`w-3 h-3 shrink-0 ${downloadingResumeId === linkedResume?.id ? 'animate-bounce' : ''}`} />
-                            <span className="truncate max-w-[120px]">{linkedResume?.displayName || linkedResume?.name || 'Resume'}</span>
-                          </button>
-                        </div>
-                      );
-                    })()}
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>Applied:</span>
-                      <strong className={`font-semibold ${theme === 'night' ? 'text-slate-200' : 'text-slate-800'}`}>
-                        {app.applicationDate}
-                      </strong>
-                    </div>
-                    {app.interviewDate && (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
-                        <span>Interview:</span>
-                        <strong className={`font-semibold ${theme === 'night' ? 'text-cyan-400' : 'text-cyan-700'}`}>
-                          {app.interviewDate}
-                        </strong>
-                      </div>
-                    )}
-                    {app.followUpDate && (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                        <span>Follow Up:</span>
-                        <strong className={`font-semibold ${theme === 'night' ? 'text-amber-400' : 'text-amber-700'}`}>
-                          {app.followUpDate}
-                        </strong>
-                      </div>
-                    )}
-                    {app.interviewDates && app.interviewDates.filter(Boolean).length > 0 && (
-                      <div className="flex flex-col gap-1 mt-1 pl-5 border-l-2 border-indigo-505/25">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Additional Round Dates:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {app.interviewDates.filter(Boolean).map((d, i) => (
-                            <span key={i} className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-                              theme === 'night'
-                                ? 'bg-indigo-950/20 border-indigo-900/40 text-indigo-300'
-                                : 'bg-slate-50 border-slate-200 text-slate-705 font-semibold'
-                            }`}>
-                              {d}
+                  {(() => {
+                    const isExpanded = !!expandedMobileMetadata[app.id];
+                    return (
+                      <div className={`space-y-2 mb-4 text-xs font-sans md:block ${isExpanded ? 'block' : 'hidden'} ${theme === 'night' ? 'text-slate-350' : 'text-slate-700'}`}>
+                        {app.officeLocation && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Location:</span>
+                            <span className={`font-semibold truncate ${theme === 'night' ? 'text-slate-200' : 'text-slate-850'}`}>{app.officeLocation}</span>
+                          </div>
+                        )}
+                        {app.salaryInformation && (
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Salary Range:</span>
+                            <span className={`font-semibold ${theme === 'night' ? 'text-slate-300' : 'text-slate-800'}`}>
+                              {app.salaryInformation}
                             </span>
-                          ))}
+                          </div>
+                        )}
+                        {app.targetSalary && (
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-555 dark:text-emerald-400 shrink-0" />
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Target Salary:</span>
+                            <span className={`font-semibold ${theme === 'night' ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                              {app.targetSalary}
+                            </span>
+                          </div>
+                        )}
+                        {app.interviewMethod && (
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Interview Type:</span>
+                            <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400">
+                              {app.interviewMethod}
+                            </span>
+                          </div>
+                        )}
+                        {app.employmentType && (
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Employment Type:</span>
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                              theme === 'night' 
+                                ? 'bg-indigo-950/40 text-indigo-400 border-indigo-900/60' 
+                                : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            }`}>
+                              {app.employmentType}
+                            </span>
+                          </div>
+                        )}
+                        {app.resumeId && (() => {
+                          const linkedResume = resumes.find(r => r.id === app.resumeId);
+                          const resumeName = linkedResume?.displayName || linkedResume?.name || 'Resume';
+                          const truncatedResumeName = resumeName.length > 15 ? resumeName.substring(0, 15) + '...' : resumeName;
+                          return (
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <FileText className="w-3.5 h-3.5 text-orange-500/80 shrink-0" />
+                              <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Linked Resume:</span>
+                              <span className={`font-bold uppercase tracking-wider text-[10px] ${
+                                theme === 'night' ? 'text-orange-400/90' : 'text-orange-755'
+                              }`} title={resumeName}>
+                                {truncatedResumeName}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Date Applied:</span>
+                          <strong className={`font-semibold ${theme === 'night' ? 'text-slate-200' : 'text-slate-800'}`}>
+                            {app.applicationDate}
+                          </strong>
                         </div>
+                        {app.interviewDate && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Interview Date:</span>
+                            <strong className={`font-semibold ${theme === 'night' ? 'text-cyan-400' : 'text-cyan-700'}`}>
+                              {app.interviewDate}
+                            </strong>
+                          </div>
+                        )}
+                        {app.followUpDate && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Follow-Up Date:</span>
+                            <strong className={`font-semibold ${theme === 'night' ? 'text-amber-400' : 'text-amber-700'}`}>
+                              {app.followUpDate}
+                            </strong>
+                          </div>
+                        )}
+                        {app.interviewDates && app.interviewDates.filter(Boolean).length > 0 && (
+                          <div className="flex flex-col gap-1 mt-1 pl-5 border-l-2 border-slate-200 dark:border-slate-800">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Additional Dates:</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {app.interviewDates.filter(Boolean).map((d, i) => {
+                                const dateVal = typeof d === 'string' ? d : d.date;
+                                const titleVal = typeof d === 'string' ? '' : d.title;
+                                if (!dateVal) return null;
+                                return (
+                                  <span key={i} className={`inline-flex flex-col px-2 py-1 rounded border text-[10px] ${
+                                    theme === 'night'
+                                      ? 'bg-indigo-950/20 border-indigo-900/40 text-indigo-300'
+                                      : 'bg-slate-50 border-slate-200 text-slate-700'
+                                  }`}>
+                                    {titleVal && <span className="font-bold block text-slate-800 dark:text-slate-100">{titleVal}</span>}
+                                    <span className="font-mono text-[9px] opacity-80">{dateVal}</span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {app.url && (
+                          <div className="flex items-center gap-2 pt-0.5">
+                            <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className={`text-[11px] font-medium ${theme === 'night' ? 'text-slate-400' : 'text-slate-500'}`}>Job Posting:</span>
+                            <a
+                              href={app.url.startsWith('http') ? app.url : `https://${app.url}`}
+                              target="_blank"
+                              referrerPolicy="no-referrer"
+                              className={`underline font-bold transition-all hover:opacity-85 ${
+                                theme === 'night'
+                                  ? 'text-indigo-400 hover:text-indigo-300'
+                                  : 'text-blue-600 hover:text-blue-700'
+                              }`}
+                              title="View job description listing"
+                            >
+                              View Listing
+                            </a>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {app.url && (
-                      <div className="flex items-center gap-2 pt-0.5">
-                        <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <a
-                          href={app.url.startsWith('http') ? app.url : `https://${app.url}`}
-                          target="_blank"
-                          referrerPolicy="no-referrer"
-                          className={`underline font-bold transition-all hover:opacity-80 ${
-                            theme === 'night'
-                              ? 'text-indigo-400 hover:text-indigo-300'
-                              : 'text-blue-600 hover:text-blue-700'
-                          }`}
-                          title="View job description listing"
-                        >
-                          Link to JD
-                        </a>
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
                   {/* Private notes preview */}
                   {app.notes && (
@@ -687,17 +740,17 @@ export default function ApplicationList({
           theme === 'night' ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200'
         }`} id="applications-table-view">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[800px]" id="db-list-table">
+            <table className="w-full text-left border-collapse md:min-w-[900px]" id="db-list-table">
               <thead>
                 <tr className={`text-[10px] font-bold uppercase tracking-widest border-b ${
                   theme === 'night' ? 'bg-slate-950/60 border-slate-850 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-700'
                 }`}>
                   <th className="py-4 px-5">Job Title & Company</th>
                   <th className="py-4 px-4">Date Applied</th>
-                  <th className="py-4 px-4">Current Status</th>
-                  <th className="py-4 px-4">Work Arrangement</th>
-                  <th className="py-4 px-4">Location</th>
-                  <th className="py-4 px-4">Posted Salary Range</th>
+                  <th className="py-4 px-4 hidden md:table-cell">Status</th>
+                  <th className="py-4 px-4 hidden md:table-cell">Employment Type</th>
+                  <th className="py-4 px-4 hidden md:table-cell">Location</th>
+                  <th className="py-4 px-4 hidden md:table-cell">Posted Salary Range</th>
                   <th className="py-4 px-5 text-right">Actions</th>
                 </tr>
               </thead>
@@ -723,7 +776,7 @@ export default function ApplicationList({
                       >
                         {/* Job Title & Company */}
                         <td className="py-3 px-5">
-                          <div className="flex flex-col max-w-[200px]">
+                          <div className="flex flex-col max-w-[280px]">
                             <span className={`font-bold truncate flex items-center gap-1.5 ${
                               theme === 'night' ? 'text-slate-100' : 'text-slate-800'
                             }`}>
@@ -754,19 +807,17 @@ export default function ApplicationList({
                             })()}
                             {app.resumeId && (() => {
                               const linkedResume = resumes.find(r => r.id === app.resumeId);
+                              const resumeName = linkedResume?.displayName || linkedResume?.name || 'Resume';
+                              const truncatedResumeName = resumeName.length > 15 ? resumeName.substring(0, 15) + '...' : resumeName;
                               return (
-                                <button
-                                  type="button"
-                                  onClick={(e) => linkedResume && handleDownloadResume(e, linkedResume)}
-                                  disabled={!linkedResume || downloadingResumeId === linkedResume.id}
-                                  className={`text-[10px] flex items-center gap-1.5 mt-1.5 font-bold truncate max-w-[180px] cursor-pointer hover:underline text-left ${
-                                    theme === 'night' ? 'text-orange-400' : 'text-orange-700'
-                                  }`}
-                                  title={linkedResume ? `Click to download: ${linkedResume.displayName || linkedResume.name}` : 'Resume'}
-                                >
-                                  <FileText className={`w-3.5 h-3.5 shrink-0 ${downloadingResumeId === linkedResume?.id ? 'animate-bounce' : ''}`} />
-                                  <span className="truncate">{linkedResume?.displayName || linkedResume?.name || 'Resume'}</span>
-                                </button>
+                                <div className="flex items-center gap-1.5 mt-1.5 text-[10px]">
+                                  <FileText className="w-3.5 h-3.5 text-orange-500/80 shrink-0" />
+                                  <span className={`font-bold uppercase tracking-wider ${
+                                    theme === 'night' ? 'text-orange-400/90' : 'text-orange-755'
+                                  }`} title={resumeName}>
+                                    Resume: {truncatedResumeName}
+                                  </span>
+                                </div>
                               );
                             })()}
                           </div>
@@ -780,7 +831,7 @@ export default function ApplicationList({
                         </td>
 
                         {/* Current Status Badge with select box */}
-                        <td className="py-2 px-4 whitespace-nowrap">
+                        <td className="py-2 px-4 whitespace-nowrap hidden md:table-cell">
                           <div className="relative inline-block w-40">
                             <select
                               value={app.status}
@@ -800,17 +851,25 @@ export default function ApplicationList({
                           </div>
                         </td>
 
-                        {/* Work Style */}
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium border ${
-                            theme === 'night' ? 'bg-slate-950/70 text-slate-400 border-slate-800' : 'bg-slate-50 text-slate-600 border-slate-200'
-                          }`}>
-                            {app.workArrangement}
-                          </span>
+                        {/* Work Style / Employment Type */}
+                        <td className="py-3 px-4 hidden md:table-cell">
+                          <div className="flex flex-col gap-1 items-start w-max">
+                            {app.employmentType ? (
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                                theme === 'night' 
+                                  ? 'bg-indigo-950/40 text-indigo-400 border-indigo-900/60' 
+                                  : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              }`}>
+                                {app.employmentType}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Location */}
-                        <td className="py-3 px-4 truncate max-w-[150px]" title={app.officeLocation}>
+                        <td className="py-3 px-4 truncate max-w-[150px] hidden md:table-cell" title={app.officeLocation}>
                           {app.officeLocation ? (
                             <span className="flex items-center gap-1">
                               <MapPin className={`w-3 h-3 shrink-0 ${theme === 'night' ? 'text-slate-500' : 'text-slate-400'}`} />
@@ -821,8 +880,8 @@ export default function ApplicationList({
                           )}
                         </td>
 
-                        {/* Salary */}
-                        <td className="py-3 px-4">
+                        {/* Salary Range */}
+                        <td className="py-3 px-4 hidden md:table-cell">
                           <div className="flex flex-col gap-0.5">
                             {app.salaryInformation ? (
                               <span className={`flex items-center gap-0.5 font-medium ${
@@ -832,7 +891,7 @@ export default function ApplicationList({
                                 {app.salaryInformation}
                               </span>
                             ) : (
-                              <span className="text-slate-500 italic text-[11px]">—</span>
+                              <span className="text-slate-550 italic text-[11px]">—</span>
                             )}
                             {app.targetSalary && (
                               <span className={`flex items-center gap-0.5 text-[10px] font-bold ${
@@ -846,19 +905,19 @@ export default function ApplicationList({
                         </td>
 
                         {/* Row Actions */}
-                        <td className="py-3 px-5 text-right whitespace-nowrap">
+                        <td className="py-3 px-5 text-right whitespace-nowrap overflow-hidden">
                           <div className="flex items-center justify-end gap-1.5">
                             {app.jobDescription && (
                               <button
                                 onClick={() => setExpandedAppId(expandedAppId === app.id ? null : app.id)}
-                                className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                className={`hidden md:inline-flex p-1.5 rounded-lg border transition-all cursor-pointer ${
                                   theme === 'night'
                                     ? expandedAppId === app.id
                                       ? 'bg-indigo-950/50 text-indigo-400 border-indigo-900/60'
                                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-950/80 border-slate-800'
                                     : expandedAppId === app.id
-                                      ? 'bg-blue-50 text-blue-600 border-blue-250'
-                                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100 border-slate-200'
+                                      ? 'bg-blue-55 text-blue-600 border-blue-250'
+                                      : 'text-slate-600 hover:text-slate-850 hover:bg-slate-105 border-slate-200'
                                 }`}
                                 title="View requirements core list"
                                 id={`table-toggle-jd-${app.id}`}
@@ -929,17 +988,23 @@ export default function ApplicationList({
                                       )}
                                       {app.interviewDates && app.interviewDates.filter(Boolean).length > 0 && (
                                         <div className="mt-1.5 space-y-1">
-                                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Additional Rounds & Mock Dates:</span>
+                                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Additional Rounds & Assessments:</span>
                                           <div className="flex flex-wrap gap-1.5">
-                                            {app.interviewDates.filter(Boolean).map((d, i) => (
-                                              <span key={i} className={`px-2 py-0.5 rounded font-mono font-bold border text-[10px] ${
-                                                theme === 'night'
-                                                  ? 'bg-slate-900 border-slate-800 text-slate-300'
-                                                  : 'bg-slate-50 border-slate-200 text-slate-700'
-                                              }`}>
-                                                {d}
-                                              </span>
-                                            ))}
+                                            {app.interviewDates.filter(Boolean).map((d, i) => {
+                                              const dateVal = typeof d === 'string' ? d : d.date;
+                                              const titleVal = typeof d === 'string' ? '' : d.title;
+                                              if (!dateVal) return null;
+                                              return (
+                                                <span key={i} className={`inline-flex flex-col px-2.5 py-1 rounded border text-[10px] ${
+                                                  theme === 'night'
+                                                    ? 'bg-slate-900 border-slate-800 text-slate-300'
+                                                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                                                }`}>
+                                                  {titleVal && <span className="font-bold text-slate-800 dark:text-slate-100 block">{titleVal}</span>}
+                                                  <span className="font-mono text-[9px] opacity-85">{dateVal}</span>
+                                                </span>
+                                              );
+                                            })}
                                           </div>
                                         </div>
                                       )}
