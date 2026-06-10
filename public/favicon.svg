@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Solid Blue Base Disc -->
+  <circle cx="50" cy="50" r="48" fill="#2563eb" />
+  <!-- White Inner Ring -->
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#ffffff" stroke-width="2.5" />
+  <!-- Cardinal direction ticks -->
+  <line x1="50" y1="12" x2="50" y2="18" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="50" y1="82" x2="50" y2="88" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="12" y1="50" x2="18" y2="50" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="82" y1="50" x2="88" y2="50" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+  
+  <!-- Tilted Compass Needle Group (Dynamic 45 degrees tilt) -->
+  <g transform="rotate(45 50 50)">
+    <!-- North Pointer (Upper half, pristine white and cool slate light) -->
+    <path d="M50,15 L56,50 L50,45 Z" fill="#ffffff" />
+    <path d="M50,15 L44,50 L50,45 Z" fill="#e2e8f0" />
+    <!-- South Pointer (Lower half, sleek sky blue and vibrant cobalt shade) -->
+    <path d="M50,85 L56,50 L50,45 Z" fill="#93c5fd" />
+    <path d="M50,85 L44,50 L50,45 Z" fill="#60a5fa" />
+    <!-- Pivot Center Pin -->
+    <circle cx="50" cy="50" r="4.5" fill="#ffffff" stroke="#2563eb" stroke-width="1.5" />
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+{
+  "name": "JobCompass",
+  "description": "Intelligently track and organize your application pipeline in real-time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

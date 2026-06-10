@@ -1,0 +1,123 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function isNumeric(val) {
+      return val is int || val is float;
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isSignedIn() && request.auth.uid == userId && (
+        incoming().uid == userId &&
+        incoming().displayName is string && incoming().displayName.size() <= 128 &&
+        incoming().email is string && incoming().email.size() <= 128
+      );
+      allow delete: if false;
+    }
+
+    // Job Applications Rules
+    match /applications/{applicationId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(applicationId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().id == applicationId &&
+        incoming().title is string && incoming().title.size() <= 128 &&
+        incoming().company is string && incoming().company.size() <= 128 &&
+        incoming().status is string && incoming().status.size() <= 64 &&
+        isNumeric(incoming().createdAt) &&
+        isNumeric(incoming().updatedAt) &&
+        (!('resumeId' in incoming()) || (incoming().resumeId is string && incoming().resumeId.size() <= 128));
+        
+      allow update: if isSignedIn() && isValidId(applicationId) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == request.auth.uid &&
+        incoming().id == applicationId &&
+        incoming().createdAt == existing().createdAt &&
+        isNumeric(incoming().updatedAt) &&
+        incoming().title is string && incoming().title.size() <= 128 &&
+        incoming().company is string && incoming().company.size() <= 128 &&
+        incoming().status is string && incoming().status.size() <= 64 &&
+        (!('resumeId' in incoming()) || (incoming().resumeId is string && incoming().resumeId.size() <= 128));
+        
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // Calendar Events Rules
+    match /calendar_events/{eventId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(eventId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().id == eventId &&
+        incoming().title is string && incoming().title.size() <= 128 &&
+        incoming().date is string && incoming().date.size() <= 32 &&
+        incoming().type is string && (incoming().type == 'Applied' || incoming().type == 'Interview' || incoming().type == 'Follow Up' || incoming().type == 'Additional Round' || incoming().type == 'Custom') &&
+        (!('notes' in incoming()) || (incoming().notes is string && incoming().notes.size() <= 5000)) &&
+        isNumeric(incoming().createdAt);
+      allow update: if isSignedIn() && isValidId(eventId) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == request.auth.uid &&
+        incoming().id == eventId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().title is string && incoming().title.size() <= 128 &&
+        incoming().date is string && incoming().date.size() <= 32 &&
+        incoming().type is string && (incoming().type == 'Applied' || incoming().type == 'Interview' || incoming().type == 'Follow Up' || incoming().type == 'Additional Round' || incoming().type == 'Custom') &&
+        (!('notes' in incoming()) || (incoming().notes is string && incoming().notes.size() <= 5000));
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // Resumes Rules
+    match /resumes/{resumeId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(resumeId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().id == resumeId &&
+        incoming().name is string && incoming().name.size() <= 256 &&
+        incoming().type is string && incoming().type.size() <= 128 &&
+        isNumeric(incoming().size) &&
+        incoming().fileData is string &&
+        isNumeric(incoming().createdAt) &&
+        (!('displayName' in incoming()) || incoming().displayName == null || (incoming().displayName is string && incoming().displayName.size() <= 256)) &&
+        (!('tags' in incoming()) || incoming().tags == null || (incoming().tags is list && incoming().tags.size() <= 50)) &&
+        (!('notes' in incoming()) || incoming().notes == null || (incoming().notes is string && incoming().notes.size() <= 10000));
+      allow update: if isSignedIn() && isValidId(resumeId) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == request.auth.uid &&
+        incoming().id == resumeId &&
+        incoming().createdAt == existing().createdAt &&
+        (!('name' in incoming()) || (incoming().name is string && incoming().name.size() <= 256)) &&
+        (!('type' in incoming()) || (incoming().type is string && incoming().type.size() <= 128)) &&
+        (!('size' in incoming()) || isNumeric(incoming().size)) &&
+        (!('fileData' in incoming()) || incoming().fileData is string) &&
+        (!('displayName' in incoming()) || incoming().displayName == null || (incoming().displayName is string && incoming().displayName.size() <= 256)) &&
+        (!('tags' in incoming()) || incoming().tags == null || (incoming().tags is list && incoming().tags.size() <= 50)) &&
+        (!('notes' in incoming()) || incoming().notes == null || (incoming().notes is string && incoming().notes.size() <= 10000));
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+
+      // Resumes Chunks Rules for large documents
+      match /chunks/{chunkId} {
+        allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow create: if isSignedIn() &&
+          incoming().userId == request.auth.uid &&
+          incoming().resumeId == resumeId &&
+          isNumeric(incoming().chunkIndex) &&
+          incoming().content is string;
+      }
+    }
+  }
+}

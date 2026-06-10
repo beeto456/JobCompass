@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "JobApplication": {
+      "title": "Job Application",
+      "description": "Represents a job application opportunity tracked by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "url": { "type": "string" },
+        "applicationDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" },
+        "interviewMethod": { "type": "string" },
+        "interviewDate": { "type": "string" },
+        "interviewDates": { "type": "array", "items": { "type": "string" } },
+        "salaryTarget": { "type": "string" },
+        "salaryPosted": { "type": "string" },
+        "workArrangement": { "type": "string" },
+        "officeLocation": { "type": "string" },
+        "followUpDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "resumeId": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "company", "status", "createdAt", "updatedAt"]
+    },
+    "Resume": {
+      "title": "Resume Document",
+      "description": "Represents a user resume file stored in Base64 string format.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "size": { "type": "number" },
+        "fileData": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "displayName": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "type", "size", "fileData", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Public user profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["uid", "displayName", "email"]
+    },
+    "CalendarEvent": {
+      "title": "Calendar Event",
+      "description": "Represents a custom calendar event created by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "type": { "type": "string", "enum": ["Applied", "Interview", "Follow Up", "Additional Round", "Custom"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "title", "date", "type", "createdAt"]
+    }
+  },
+  "firestore": {
+    "calendar_events": {
+      "schema": { "$ref": "#/entities/CalendarEvent" },
+      "description": "Collection of custom calendar events."
+    },
+    "applications": {
+      "schema": { "$ref": "#/entities/JobApplication" },
+      "description": "Collection of job applications."
+    },
+    "resumes": {
+      "schema": { "$ref": "#/entities/Resume" },
+      "description": "Collection of uploaded resume files."
+    },
+    "users": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Collection of user profile data."
+    }
+  }
+}
