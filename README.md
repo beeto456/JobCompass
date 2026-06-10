@@ -68,12 +68,16 @@ JobCompass was developed as a job search command centre for active job seekers. 
 ---
 
 ## Run Locally
-
-This repository contains everything needed to run the app locally.
+This repository contains everything needed to run the app locally. 
 
 **Prerequisites:** Node.js
 
 1. Install dependencies:
+   ```bash
+   npm install
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
 
    ```bash
    npm install
